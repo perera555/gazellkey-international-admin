@@ -112,7 +112,7 @@ export function toPayload(field: Field, value: Value, mode: Mode): unknown {
     case "number":
       return text == "" ? (field.nullable ? null : undefined) : Number(text);
     case "datetime":
-      return text == "" ? undefined : new Date(text).toISOString();
+      return text == "" ? (field.nullable ? null : undefined) : new Date(text).toISOString();
     case "currency":
       return text == "" ? undefined : text.toUpperCase();
     case "email":

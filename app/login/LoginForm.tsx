@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
+import PasswordInput from "@/components/PasswordInput";
 import { apiRequest } from "@/lib/api-client";
 import { Role } from "@/lib/types";
 
@@ -32,7 +33,7 @@ export default function LoginForm({
     const result = await apiRequest<{ user?: { role: Role } }>(
       "POST",
       "/api/auth/login",
-      { email: form.get("email"), password: form.get("password") },
+      { email: form.get("email"), password: form.get("password"), remember: form.get("remember") == "on" },
     );
 
     if (!result.ok) {
@@ -59,11 +60,12 @@ export default function LoginForm({
         <label htmlFor="email" className="mb-1 block text-sm font-medium text-white/90">
           Email
         </label>
+        {/* "username" tells browsers this is the login name to save with the password */}
         <input
           id="email"
           name="email"
           type="email"
-          autoComplete="email"
+          autoComplete="username"
           required
           className="input"
         />
@@ -72,15 +74,12 @@ export default function LoginForm({
         <label htmlFor="password" className="mb-1 block text-sm font-medium text-white/90">
           Password
         </label>
-        <input
-          id="password"
-          name="password"
-          type="password"
-          autoComplete="current-password"
-          required
-          className="input"
-        />
+        <PasswordInput id="password" name="password" autoComplete="current-password" required />
       </div>
+      <label className="flex cursor-pointer items-center gap-2.5 text-sm text-white/85">
+        <input id="remember" name="remember" type="checkbox" className="h-4 w-4 accent-amber-400" />
+        Remember me for 30 days
+      </label>
       {error && (
         <p role="alert" className="rounded-xl bg-red-50 px-3 py-2 text-sm text-red-800">
           {error}

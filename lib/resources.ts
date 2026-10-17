@@ -658,7 +658,12 @@ function tradeResource(direction: "IMPORT" | "EXPORT"): CatalogueResource {
     card: (item) => ({
       image: photo(item, direction, item.category),
       eyebrow: CATEGORY_LABELS[text(item.category)] ?? humanize(text(item.category)),
-      details: [text(item.sku), text(item.origin), item.requiresPermit ? "Permit needed" : ""],
+      details: [
+        text(item.sku),
+        text(item.origin),
+        item.requiresPermit ? "Permit needed" : "",
+        item.compareAtPrice != null ? `Was ${formatMoney(item.compareAtPrice as string, item.currency as string)}` : "",
+      ],
       price: item.pricingMode == "FIXED" && item.price != null ? `${priceOf(item)} / ${item.unit}` : priceOf(item),
     }),
     sections: [
@@ -683,14 +688,99 @@ function tradeResource(direction: "IMPORT" | "EXPORT"): CatalogueResource {
           { name: "specifications", label: "Specifications", type: "json", wide: true, placeholder: "Grade: BOPF\nMoisture: 3%", help: "One \"name: value\" per line." },
         ],
       },
-      pricingSection,
+      {
+        ...pricingSection,
+        fields: [
+          ...pricingSection.fields.slice(0, 3),
+          {
+            name: "compareAtPrice",
+            label: "Labelled price (optional)",
+            type: "number",
+            nullable: true,
+            showIf: { field: "pricingMode", value: "FIXED" },
+            help: "Higher \"was\" price, shown crossed out with a discount badge. Leave empty for no discount.",
+          },
+          ...pricingSection.fields.slice(3),
+        ],
+      },
       supplierSection,
       photosSection,
     ],
   };
 }
 
+// Retail goods for the website's /shop page (/api/shop/products). Always a
+// fixed price. No fixed division: staff pick the division that fulfils the
+// orders, and the API checks they may edit that division's catalogue.
+const shopProducts: CatalogueResource = {
+  key: "shop",
+  title: "Shop products",
+  singular: "shop product",
+  description: "Retail products sold online on the website's Shop page. Fixed-price gems, parts and trade products appear there too.",
+  endpoint: "/api/shop/products",
+  path: "/catalogue/shop",
+  privilege: "catalogue:edit",
+  color: "#C9A227",
+  searchPlaceholder: "Name, SKU, brand or category...",
+  remove: archive,
+  restore: restoreAsDraft,
+  titleOf: (item) => text(item.name),
+  filters: [listingStatusFilter],
+  card: (item) => {
+    const onSale = item.compareAtPrice != null && Number(item.compareAtPrice) > Number(item.price);
+    const stock = Number(item.stockQty);
+    return {
+      image: photo(item, (item.division as Division) ?? "IMPORT"),
+      eyebrow: [text(item.category), item.featured ? "Featured" : ""].filter(Boolean).join(" · "),
+      details: [
+        [text(item.sku), text(item.brand)].filter(Boolean).join(" · "),
+        onSale ? `Sale - was ${formatMoney(item.compareAtPrice as string, item.currency as string)}` : "",
+      ],
+      price: formatMoney(item.price as string, item.currency as string),
+      badge: stock > 0 ? `${stock} in stock` : "Out of stock",
+    };
+  },
+  sections: [
+    {
+      title: "Product details",
+      fields: [
+        { name: "name", label: "Name", type: "text", required: true, wide: true, placeholder: "Ceylon cinnamon gift box" },
+        { name: "sku", label: "SKU", type: "text", required: true, uppercase: true, placeholder: "SHP-GFT-001", help: "A-Z, 0-9 and dashes." },
+        { name: "category", label: "Category", type: "text", required: true, placeholder: "Gifts", help: "Customers filter the shop by this. Reuse the same spelling, e.g. Gifts, Home & Living, Beauty." },
+        { name: "brand", label: "Brand", type: "text" },
+        { name: "division", label: "Division", type: "select", options: DIVISION_OPTIONS, defaultValue: "IMPORT", required: true, help: "The team that manages this product and delivers its orders." },
+        { name: "summary", label: "Short summary", type: "text", wide: true, placeholder: "Hand-packed true cinnamon from Matale, 250 g", help: "One line under the name on the shop page." },
+        { name: "description", label: "Description", type: "textarea", required: true, wide: true },
+        { name: "highlights", label: "Key features", type: "lines", wide: true, placeholder: "100% pure Ceylon cinnamon\nGift-ready wooden box", help: "One per line, shown as bullet points." },
+        { name: "specifications", label: "Specifications", type: "json", wide: true, placeholder: "Weight: 250 g\nOrigin: Matale", help: "One \"name: value\" per line." },
+      ],
+    },
+    {
+      title: "Price & stock",
+      description: "Set an original price higher than the selling price to show a sale with a discount badge.",
+      fields: [
+        { name: "price", label: "Selling price", type: "number", required: true },
+        { name: "currency", label: "Currency", type: "currency", defaultValue: "LKR", placeholder: "LKR", required: true },
+        { name: "compareAtPrice", label: "Original price (optional)", type: "number", nullable: true, help: "Shown crossed out, e.g. was Rs 4,500." },
+        { name: "saleEndsAt", label: "Sale ends (optional)", type: "datetime", nullable: true, help: "After this the original price is hidden. Leave empty for no end." },
+        { name: "unit", label: "Unit", type: "text", defaultValue: "item", required: true, placeholder: "item / pack / box" },
+        { name: "stockQty", label: "Stock", type: "number", integer: true, defaultValue: "0", required: true },
+      ],
+    },
+    {
+      title: "Publishing",
+      description: "Only published products appear on the website.",
+      fields: [
+        { name: "featured", label: "Feature this product at the top of the shop", type: "checkbox" },
+        { name: "status", label: "Status", type: "select", options: opts(PUBLISH_STATUS), defaultValue: "DRAFT", required: true },
+      ],
+    },
+    photosSection,
+  ],
+};
+
 export const CATALOGUE: CatalogueResource[] = [
+  shopProducts,
   tours,
   hotels,
   events,

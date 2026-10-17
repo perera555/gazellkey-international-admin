@@ -36,6 +36,7 @@ export const NAV_GROUPS: NavGroup[] = [
   {
     title: "Catalogue",
     items: [
+      { href: "/catalogue/shop", label: "Shop products", privilege: "catalogue:edit", color: "#C9A227" },
       { href: "/catalogue/tours", label: "Tour packages", privilege: "catalogue:edit", division: "TRAVEL", color: "#1E88E5" },
       { href: "/catalogue/hotels", label: "Hotels", privilege: "catalogue:edit", division: "TRAVEL", color: "#1E88E5" },
       { href: "/catalogue/events", label: "Events", privilege: "catalogue:edit", division: "EVENTS", color: "#F26B21" },
