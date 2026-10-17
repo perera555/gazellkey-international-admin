@@ -1,0 +1,286 @@
+@import "tailwindcss";
+
+/* Gazellekey brand: deep midnight navy and warm gold, with a colour per
+   division (SRS 9.2). Same tokens, font and style as the public website
+   (gazellekey-web app/globals.css). */
+@theme {
+  --color-navy-950: #060b1a;
+  --color-navy-900: #0b1530;
+  --color-navy-800: #141f3d;
+  --color-navy-700: #22305a;
+  --color-navy-100: #e3e8f0;
+  --color-navy-50: #eef1f6;
+  --color-gold-600: #b88a2e;
+  --color-gold-500: #d4a64a;
+  --color-gold-400: #e5c07b;
+  --color-gold-100: #f7ecd5;
+
+  --color-travel: #1e88e5;
+  --color-events: #f26b21;
+  --color-gems: #8e24aa;
+  --color-vehicles: #2e9e4f;
+  --color-import: #e53935;
+  --color-export: #e0a100;
+
+  --font-sans: var(--font-jakarta);
+  --font-display: var(--font-jakarta);
+
+  --animate-float: float 7s ease-in-out infinite;
+
+  @keyframes float {
+    0%,
+    100% {
+      translate: 0 0;
+    }
+    50% {
+      translate: 0 -8px;
+    }
+  }
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  background:
+    radial-gradient(1100px 520px at 100% -8%, rgb(212 166 74 / 0.1), transparent 60%),
+    radial-gradient(900px 480px at -8% 0%, rgb(34 48 90 / 0.08), transparent 60%),
+    #f5f7fb;
+  background-attachment: fixed;
+  color: #1a2236;
+  text-rendering: optimizeLegibility;
+}
+
+::selection {
+  background: rgb(212 166 74 / 0.35);
+  color: #060b1a;
+}
+
+h1,
+h2,
+h3 {
+  text-wrap: balance;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-gold-500);
+  outline-offset: 2px;
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgb(11 21 48 / 0.3) transparent;
+}
+
+/* Tailwind v4: shared classes are @utility (not @layer components),
+   so they can be reused with @apply, e.g. btn-gold builds on btn. */
+
+/* Buttons: smooth pills that lift slightly on hover */
+@utility btn {
+  @apply inline-flex cursor-pointer items-center justify-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold tracking-tight whitespace-nowrap transition duration-200 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold-500 disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0;
+}
+@utility btn-gold {
+  @apply btn text-navy-950;
+  background: linear-gradient(180deg, #e5c07b, #d4a64a);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.45),
+    0 10px 22px -12px rgb(212 166 74 / 0.95);
+  &:hover:not(:disabled) {
+    background: linear-gradient(180deg, #ecca86, #dcb058);
+  }
+}
+@utility btn-navy {
+  @apply btn text-white;
+  background: linear-gradient(180deg, var(--color-navy-800), var(--color-navy-950));
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.12),
+    0 10px 22px -14px rgb(6 11 26 / 0.9);
+  &:hover:not(:disabled) {
+    background: linear-gradient(180deg, var(--color-navy-700), var(--color-navy-900));
+  }
+}
+@utility btn-outline {
+  @apply btn border border-slate-200 bg-white text-navy-900 hover:border-gold-500/60 hover:text-navy-950;
+  box-shadow: 0 1px 2px rgb(15 23 42 / 0.05);
+}
+/* Light-on-dark secondary button for the navy scenes */
+@utility btn-glass {
+  @apply btn border border-white/25 text-white backdrop-blur-md hover:border-white/50 hover:bg-white/10;
+  background: rgb(255 255 255 / 0.06);
+}
+@utility btn-danger {
+  @apply btn border border-red-200 bg-white text-red-700 hover:border-red-300 hover:bg-red-50;
+}
+@utility btn-danger-solid {
+  @apply btn text-white;
+  background: linear-gradient(180deg, #ef4444, #dc2626);
+  box-shadow: 0 10px 22px -12px rgb(185 28 28 / 0.8);
+}
+@utility btn-sm {
+  @apply px-3.5 py-1.5 text-xs;
+}
+
+@utility label {
+  @apply mb-1.5 block text-xs font-semibold tracking-wide text-slate-500 uppercase;
+}
+@utility input {
+  @apply block w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-900 transition placeholder:text-slate-400 hover:border-slate-300 focus:border-gold-500 focus:ring-4 focus:ring-gold-500/15 focus:outline-none disabled:bg-slate-50 disabled:text-slate-500;
+  box-shadow: 0 1px 2px rgb(15 23 42 / 0.04);
+}
+
+/* Clean white panels: hairline border and a soft, layered shadow */
+@utility card {
+  @apply rounded-3xl border border-slate-200/80 bg-white;
+  box-shadow:
+    0 1px 2px rgb(15 23 42 / 0.04),
+    0 10px 30px -18px rgb(11 21 48 / 0.18);
+}
+
+/* Smoky glass panel for content on the navy scenes */
+@utility glass {
+  @apply rounded-3xl border border-white/10;
+  background: linear-gradient(160deg, rgb(255 255 255 / 0.09), rgb(255 255 255 / 0.03));
+  backdrop-filter: blur(18px) saturate(140%);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.08),
+    0 30px 60px -30px rgb(0 0 0 / 0.7);
+}
+
+/* Navy scene: page banners, the sidebar and the login screen.
+   --grid tints the glow (e.g. a division colour). */
+@utility scene {
+  @apply relative isolate overflow-hidden text-white;
+  background:
+    radial-gradient(circle at 88% 120%, color-mix(in srgb, var(--grid, #d4a64a) 32%, transparent), transparent 55%),
+    radial-gradient(circle at 0% 0%, rgb(34 48 90 / 0.75), transparent 60%),
+    linear-gradient(160deg, #0b1530, #060b1a);
+}
+
+@utility badge {
+  @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium whitespace-nowrap;
+}
+
+@utility heading-display {
+  @apply font-display font-bold tracking-tight text-navy-950;
+}
+
+/* Titles on the navy scenes: a soft shadow so they lift off the background */
+@utility text-3d {
+  @apply font-bold tracking-tight;
+  text-shadow: 0 10px 30px rgb(0 0 0 / 0.45);
+}
+
+@utility text-gold-gradient {
+  background: linear-gradient(100deg, #f0d49a, #d4a64a 45%, #ecca86);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* ─────────────── Scene pieces ─────────────── */
+
+/* "Global network" backdrop inside the navy scenes: glowing gold nodes on a
+   faint dot grid (kept under its old name). Tinted by --grid. */
+.grid-floor {
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  pointer-events: none;
+  --node: color-mix(in srgb, var(--grid, #d4a64a) 55%, #e5c07b);
+  background-image:
+    radial-gradient(circle at 14% 30%, var(--node) 0 1.5px, transparent 18px),
+    radial-gradient(circle at 46% 78%, var(--node) 0 1.5px, transparent 16px),
+    radial-gradient(circle at 72% 24%, var(--node) 0 1.5px, transparent 20px),
+    radial-gradient(circle at 90% 66%, var(--node) 0 1.5px, transparent 16px),
+    radial-gradient(rgb(255 255 255 / 0.07) 1px, transparent 1px);
+  background-size:
+    100% 100%,
+    100% 100%,
+    100% 100%,
+    100% 100%,
+    22px 22px;
+  mask-image: radial-gradient(ellipse at 60% 40%, #000 35%, transparent 85%);
+  opacity: 0.8;
+  animation: glow-pulse 6s ease-in-out infinite;
+}
+@keyframes glow-pulse {
+  50% {
+    opacity: 0.55;
+  }
+}
+
+/* Cards that lean toward the pointer (see components/Tilt.tsx) */
+.tilt {
+  position: relative;
+  transform: perspective(1200px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg));
+  transform-style: preserve-3d;
+  transition:
+    transform 0.2s ease-out,
+    translate 0.3s ease-out;
+}
+.tilt:hover {
+  translate: 0 -3px;
+}
+.tilt-glare {
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  border-radius: inherit;
+  background: radial-gradient(circle at var(--gx, 50%) var(--gy, 0%), rgb(255 255 255 / 0.18), transparent 55%);
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+.tilt:hover .tilt-glare {
+  opacity: 1;
+}
+
+/* Confirm dialogs rise out of a blurred backdrop */
+dialog.modal {
+  margin: auto;
+  border: none;
+  background: transparent;
+  padding: 0;
+  max-width: min(28rem, calc(100vw - 2rem));
+  width: 100%;
+}
+dialog.modal::backdrop {
+  background: rgb(6 11 26 / 0.55);
+  backdrop-filter: blur(4px);
+}
+dialog.modal[open] > * {
+  animation: modal-in 0.22s ease-out;
+}
+@keyframes modal-in {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.98);
+  }
+}
+
+/* Page content rises into place on load */
+@media (prefers-reduced-motion: no-preference) {
+  .rise {
+    animation: rise 0.4s ease-out both;
+  }
+}
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  .tilt {
+    transform: none !important;
+  }
+}
