@@ -2,6 +2,7 @@
 
 import { ChangeEvent, FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import toast from "react-hot-toast";
 import ConfirmAction from "@/components/ConfirmAction";
 import StatusBadge from "@/components/StatusBadge";
 import { apiRequest } from "@/lib/api-client";
@@ -44,13 +45,16 @@ export function GalleryUpload() {
       const data = await response.json().catch(() => ({}));
       if (!response.ok) {
         setError(data.message ?? "Could not add the photo.");
+        toast.error(data.message ?? "Could not add the photo.");
         return;
       }
       setPreview(null);
       setFormKey((key) => key + 1);
+      toast.success("Photo added to the gallery.");
       router.refresh();
     } catch {
       setError("Network error. Please check your connection.");
+      toast.error("Network error. Please check your connection.");
     } finally {
       setBusy(false);
     }
@@ -157,6 +161,7 @@ export function GalleryCard({ photo }: { photo: GalleryPhoto }) {
       setError(result.data.message ?? "Could not save.");
       return false;
     }
+    toast.success("Photo saved.");
     router.refresh();
     return true;
   }

@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
+import toast from "react-hot-toast";
 import { apiRequest } from "@/lib/api-client";
 
 // A button that asks first, then calls the API (archive, deactivate, restore).
@@ -44,6 +45,7 @@ export default function ConfirmAction({
       return;
     }
     dialog.current?.close();
+    toast.success(`${label} - done.`);
     if (redirectTo) {
       router.push(redirectTo);
     }

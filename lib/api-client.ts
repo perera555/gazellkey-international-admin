@@ -1,12 +1,16 @@
+import toast from "react-hot-toast";
+
 // Browser helper for calling the API from client components.
 // /api/... is forwarded to the backend by the rewrite in next.config.ts.
 // Returns { ok, status, data } and never throws on HTTP errors, so forms
-// can show the API's "message" directly.
+// can show the API's "message" directly. A failed save or action (anything
+// but GET) also pops up an error toast, on every page.
 export async function apiRequest<T = { message?: string }>(
   method: "GET" | "POST" | "PUT" | "DELETE",
   path: string,
   body?: unknown,
 ): Promise<{ ok: boolean; status: number; data: T & { message?: string } }> {
+  let result: { ok: boolean; status: number; data: T & { message?: string } };
   try {
     const response = await fetch(path, {
       method,
@@ -14,9 +18,9 @@ export async function apiRequest<T = { message?: string }>(
       body: body ? JSON.stringify(body) : undefined,
     });
     const data = await response.json().catch(() => ({}));
-    return { ok: response.ok, status: response.status, data };
+    result = { ok: response.ok, status: response.status, data };
   } catch {
-    return {
+    result = {
       ok: false,
       status: 0,
       data: { message: "Network error. Please check your connection." } as T & {
@@ -24,4 +28,8 @@ export async function apiRequest<T = { message?: string }>(
       },
     };
   }
+  if (!result.ok && method != "GET") {
+    toast.error(result.data.message ?? "Something went wrong. Please try again.");
+  }
+  return result;
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import PhotoInput from "@/components/PhotoInput";
 import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
 import CatalogueCard from "@/components/CatalogueCard";
@@ -62,9 +63,21 @@ function ResourceFormInner({
   const router = useRouter();
   const fields = resource.sections.flatMap((section) => section.fields);
 
-  const [initial] = useState(() =>
-    Object.fromEntries(fields.map((field) => [field.name, initialValue(field, item)])),
-  );
+  const [initial] = useState(() => {
+    const start: Record<string, Value> = Object.fromEntries(fields.map((field) => [field.name, initialValue(field, item)]));
+    // a saved value that is not in its list (e.g. a custom category) opens as
+    // "Other" with the value typed in the Other box
+    for (const field of fields.filter((each) => each.otherFor)) {
+      const { field: target, value: otherValue } = field.otherFor!;
+      const list = fields.find((each) => each.name == target)?.options ?? [];
+      const saved = String(start[target] ?? "");
+      if (saved != "" && !list.some((option) => option.value == saved)) {
+        start[field.name] = saved;
+        start[target] = otherValue;
+      }
+    }
+    return start;
+  });
   const [values, setValues] = useState<Record<string, Value>>(initial);
   const [slugTouched, setSlugTouched] = useState(mode == "edit");
   const [busy, setBusy] = useState(false);
@@ -75,7 +88,12 @@ function ResourceFormInner({
     if (field.only && field.only != mode) {
       return false;
     }
-    return field.showIf == undefined || values[field.showIf.field] == field.showIf.value;
+    if (field.showIf == undefined) {
+      return true;
+    }
+    const current = values[field.showIf.field];
+    // tick-box lists ("multi"): shown when that option is ticked
+    return Array.isArray(current) ? (current as unknown[]).includes(field.showIf.value) : current == field.showIf.value;
   }
 
   function setValue(name: string, value: Value) {
@@ -117,6 +135,25 @@ function ResourceFormInner({
       }
       if (mode == "create" || JSON.stringify(payload) != JSON.stringify(toPayload(field, initial[field.name], mode))) {
         body[field.name] = payload;
+      }
+    }
+
+    // "Other" boxes: the typed name is saved as the select's value
+    for (const field of fields.filter((each) => each.otherFor)) {
+      const { field: target, value: otherValue } = field.otherFor!;
+      delete body[field.name]; // the box itself is not an API field
+      const typed = String(values[field.name] ?? "").trim();
+      const chosen = String(values[target] ?? "");
+      if (chosen == otherValue && typed == "") {
+        setFieldErrors({ [field.name]: "Please type the name." });
+        setError(`${field.label}: please type the name.`);
+        return;
+      }
+      const effective = chosen == otherValue ? typed : chosen;
+      if (mode == "create" || effective != String(item?.[target] ?? "")) {
+        body[target] = effective;
+      } else {
+        delete body[target];
       }
     }
 
@@ -387,6 +424,18 @@ function FieldInput({
 
     case "itinerary":
       return <ItineraryInput value={value as ItineraryDay[]} onChange={onChange} />;
+
+    case "photo":
+      return (
+        <PhotoInput
+          id={id}
+          label={field.label}
+          value={value as string}
+          onChange={onChange}
+          uploadTo={field.uploadTo ?? ""}
+          help={error ?? field.help}
+        />
+      );
 
     case "textarea":
     case "lines":

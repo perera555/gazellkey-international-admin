@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
+import toast from "react-hot-toast";
 import { apiRequest } from "@/lib/api-client";
 
 // Approve / Cancel buttons for something a customer sent in (a document,
@@ -50,6 +51,7 @@ export default function ApproveCancel({
       return;
     }
     dialog.current?.close();
+    toast.success(mode == "approve" ? "Approved." : "Cancelled.");
     router.refresh();
   }
 

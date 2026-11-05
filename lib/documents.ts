@@ -20,6 +20,8 @@ export const NO_APPROVAL_TYPES = [
   "INVOICE",
   "PACKING_LIST",
   "SHIPPING_RECORD",
+  "CV",
+  "PHOTO",
   "OTHER",
 ];
 

@@ -26,7 +26,7 @@ export default async function EditCatalogueItemPage({ params }: PageProps<"/cata
         <PageHeader
           eyebrow={resource.title}
           title={`Add ${resource.singular}`}
-          description="New items start as drafts. Publish them to show them on the website."
+          description={resource.addNote ?? "New items start as drafts. Publish them to show them on the website."}
           color={resource.color}
           back={{ href: resource.path, label: resource.title }}
         />

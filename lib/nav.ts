@@ -9,7 +9,7 @@ export interface NavItem {
   privilege?: string;
   division?: Division;
   color?: string;
-  badge?: "documents" | "orders"; // shows how many are waiting for approval
+  badge?: "documents" | "orders" | "rentals" | "jobs"; // shows how many are waiting for approval
 }
 
 export interface NavGroup {
@@ -30,6 +30,8 @@ export const NAV_GROUPS: NavGroup[] = [
       { href: "/customers", label: "Customers", privilege: "customers:read" },
       { href: "/quotations", label: "Quotations", privilege: "quotations:read" },
       { href: "/orders", label: "Orders & bookings", privilege: "orders:read", badge: "orders" },
+      { href: "/rentals", label: "Rental bookings", privilege: "orders:read", division: "EVENTS", badge: "rentals" },
+      { href: "/jobs/applications", label: "Job applications", privilege: "travel:cases", division: "TRAVEL", badge: "jobs" },
       { href: "/payments", label: "Payments", privilege: "payments:read" },
     ],
   },
@@ -37,6 +39,8 @@ export const NAV_GROUPS: NavGroup[] = [
     title: "Catalogue",
     items: [
       { href: "/catalogue/shop", label: "Shop products", privilege: "catalogue:edit", color: "#C9A227" },
+      { href: "/catalogue/rentals", label: "Rental items", privilege: "catalogue:edit", division: "EVENTS", color: "#F26B21" },
+      { href: "/catalogue/jobs", label: "Job vacancies", privilege: "catalogue:edit", division: "TRAVEL", color: "#1E88E5" },
       { href: "/catalogue/tours", label: "Tour packages", privilege: "catalogue:edit", division: "TRAVEL", color: "#1E88E5" },
       { href: "/catalogue/hotels", label: "Hotels", privilege: "catalogue:edit", division: "TRAVEL", color: "#1E88E5" },
       { href: "/catalogue/events", label: "Events", privilege: "catalogue:edit", division: "EVENTS", color: "#F26B21" },
@@ -52,6 +56,7 @@ export const NAV_GROUPS: NavGroup[] = [
     items: [
       { href: "/gallery", label: "Travel gallery", privilege: "catalogue:edit", division: "TRAVEL" },
       { href: "/reviews", label: "Customer reviews", privilege: "reviews:moderate" },
+      { href: "/catalogue/team", label: "Directors & managers", privilege: "content:edit" },
     ],
   },
   {
@@ -61,6 +66,10 @@ export const NAV_GROUPS: NavGroup[] = [
       { href: "/suppliers", label: "Suppliers", privilege: "suppliers:read" },
       { href: "/users", label: "Users", privilege: "users:read" },
     ],
+  },
+  {
+    title: "Help",
+    items: [{ href: "/guide", label: "User guide" }], // every staff member
   },
 ];
 

@@ -24,7 +24,8 @@ export type FieldType =
   | "images" // URL[], one per line, with previews
   | "multi" // string[] from checkboxes
   | "models" // string[] of "Make Model", picked by make (components/ModelPicker.tsx)
-  | "itinerary"; // [{ day, title, description }]
+  | "itinerary" // [{ day, title, description }]
+  | "photo"; // one picture: upload from the computer (to uploadTo) or a link
 
 export interface Field {
   name: string;
@@ -43,6 +44,10 @@ export interface Field {
   showIf?: { field: string; value: string };
   slugFrom?: string; // filled from this field while adding
   uppercase?: boolean;
+  // A text box for "Other": when the select `field` is set to `value`, what is
+  // typed here is saved as that select's value (this field itself is not sent).
+  otherFor?: { field: string; value: string };
+  uploadTo?: string; // "photo" fields: where a chosen picture is uploaded
 }
 
 export interface Section {
@@ -72,6 +77,7 @@ export interface Resource {
     note: string;
   };
   restore: { label: string; body: Record<string, string>; note: string };
+  addNote?: string; // under the title of the add / edit page
   titleOf: (item: Item) => string;
 }
 
@@ -129,6 +135,26 @@ const IMPORT_CATEGORIES = [
   "POWER_HAND_TOOLS",
 ];
 const EXPORT_CATEGORIES = ["COFFEE", "CHOCOLATE", "TEA", "SPICES", "FRUITS_VEGETABLES"];
+
+// Shop product categories (the website's Shop page filters by these).
+// Add a new one here; the label is saved as the category name.
+export const SHOP_CATEGORIES = [
+  "Tea & Coffee",
+  "Spices & Food",
+  "Gifts & Hampers",
+  "Handicrafts",
+  "Home & Living",
+  "Kitchen & Dining",
+  "Electronics & Gadgets",
+  "Fashion & Accessories",
+  "Beauty & Personal Care",
+  "Health & Wellness",
+  "Kids & Toys",
+  "Sports & Outdoors",
+  "Stationery & Office",
+  "Other",
+];
+const SHOP_CATEGORY_OPTIONS: Option[] = SHOP_CATEGORIES.map((category) => ({ value: category, label: category }));
 
 // Same list as the backend's lib/privileges.ts
 const PRIVILEGES = [
@@ -725,7 +751,7 @@ const shopProducts: CatalogueResource = {
   remove: archive,
   restore: restoreAsDraft,
   titleOf: (item) => text(item.name),
-  filters: [listingStatusFilter],
+  filters: [{ name: "category", label: "Category", options: SHOP_CATEGORIES, labels: Object.fromEntries(SHOP_CATEGORIES.map((c) => [c, c])) }, listingStatusFilter],
   card: (item) => {
     const onSale = item.compareAtPrice != null && Number(item.compareAtPrice) > Number(item.price);
     const stock = Number(item.stockQty);
@@ -746,7 +772,17 @@ const shopProducts: CatalogueResource = {
       fields: [
         { name: "name", label: "Name", type: "text", required: true, wide: true, placeholder: "Ceylon cinnamon gift box" },
         { name: "sku", label: "SKU", type: "text", required: true, uppercase: true, placeholder: "SHP-GFT-001", help: "A-Z, 0-9 and dashes." },
-        { name: "category", label: "Category", type: "text", required: true, placeholder: "Gifts", help: "Customers filter the shop by this. Reuse the same spelling, e.g. Gifts, Home & Living, Beauty." },
+        { name: "category", label: "Category", type: "select", options: SHOP_CATEGORY_OPTIONS, required: true, help: "Customers filter the Shop by this. Not in the list? Choose Other and type the name." },
+        {
+          name: "categoryOther",
+          label: "Other category name",
+          type: "text",
+          required: true,
+          placeholder: "e.g. Pet Supplies",
+          showIf: { field: "category", value: "Other" },
+          otherFor: { field: "category", value: "Other" },
+          help: "Shown on the Shop as the category. Use the same spelling for every product in it.",
+        },
         { name: "brand", label: "Brand", type: "text" },
         { name: "division", label: "Division", type: "select", options: DIVISION_OPTIONS, defaultValue: "IMPORT", required: true, help: "The team that manages this product and delivers its orders." },
         { name: "summary", label: "Short summary", type: "text", wide: true, placeholder: "Hand-packed true cinnamon from Matale, 250 g", help: "One line under the name on the shop page." },
@@ -779,8 +815,275 @@ const shopProducts: CatalogueResource = {
   ],
 };
 
+// Equipment hired out per day (/api/rentals/items): huts, chairs, tables ...
+// Bookings for them are under Sales > Rental bookings (/rentals).
+const rentalItems: CatalogueResource = {
+  key: "rentals",
+  title: "Rental items",
+  singular: "rental item",
+  description: "Tents, huts, chairs, tables, decoration and sound hired out for weddings, funerals and parties.",
+  endpoint: "/api/rentals/items",
+  path: "/catalogue/rentals",
+  privilege: "catalogue:edit",
+  division: "EVENTS",
+  color: "#F26B21",
+  searchPlaceholder: "Name, SKU or category...",
+  remove: archive,
+  restore: restoreAsDraft,
+  titleOf: (item) => text(item.name),
+  filters: [listingStatusFilter],
+  card: (item) => ({
+    image: photo(item, "EVENTS"),
+    eyebrow: [text(item.category), item.featured ? "Featured" : ""].filter(Boolean).join(" · "),
+    details: [text(item.sku), `${text(item.quantityOwned)} ${text(item.unit)} owned`, item.minQuantity && Number(item.minQuantity) > 1 ? `Min. ${text(item.minQuantity)}` : ""],
+    price: `${formatMoney(item.pricePerDay as string, item.currency as string)} / day`,
+  }),
+  sections: [
+    {
+      title: "Item details",
+      fields: [
+        { name: "name", label: "Name", type: "text", required: true, wide: true, placeholder: "Wedding Hut (Marquee) 40 x 60 ft" },
+        { name: "sku", label: "SKU", type: "text", required: true, uppercase: true, placeholder: "RNT-HUT-001", help: "A-Z, 0-9 and dashes." },
+        { name: "category", label: "Category", type: "text", required: true, placeholder: "Tents & huts", help: "Customers filter by this. Reuse the same spelling: Tents & huts, Chairs, Tables, Decoration, Sound & AV." },
+        { name: "description", label: "Description", type: "textarea", required: true, wide: true },
+        { name: "highlights", label: "Key features", type: "lines", wide: true, placeholder: "Seats about 200 guests\nSet up by our team", help: "One per line, shown as bullet points." },
+        { name: "specifications", label: "Specifications", type: "json", wide: true, placeholder: "Size: 40 x 60 ft\nColour: White", help: "One \"name: value\" per line." },
+      ],
+    },
+    {
+      title: "Price and stock",
+      description: "Customers see the price per unit per day. Delivery and setup are added when you confirm a booking.",
+      fields: [
+        { name: "pricePerDay", label: "Price per day", type: "number", required: true },
+        { name: "currency", label: "Currency", type: "currency", defaultValue: "LKR", placeholder: "LKR", required: true },
+        { name: "unit", label: "Unit", type: "text", defaultValue: "piece", required: true, placeholder: "piece / set / hut" },
+        { name: "quantityOwned", label: "How many you own", type: "number", integer: true, defaultValue: "1", required: true, help: "The most that can be hired out on one day." },
+        { name: "minQuantity", label: "Minimum per booking", type: "number", integer: true, defaultValue: "1" },
+        { name: "deposit", label: "Refundable deposit per unit (optional)", type: "number", nullable: true },
+      ],
+    },
+    {
+      title: "Publishing",
+      description: "Only published items appear on the website's Rentals page.",
+      fields: [
+        { name: "featured", label: "Feature this item at the top of the Rentals page", type: "checkbox" },
+        { name: "status", label: "Status", type: "select", options: opts(PUBLISH_STATUS), defaultValue: "DRAFT", required: true },
+      ],
+    },
+    photosSection,
+  ],
+};
+
+// Overseas job vacancies (/api/jobs/vacancies) shown on the website's Work visa page.
+// Applications and interviews are under Travel > Job applications (/jobs/applications).
+export const JOB_REGIONS = ["Middle East", "Asia", "Europe", "Africa", "Americas", "Oceania"];
+const JOB_INTERVIEW_MODES = opts(["WALK_IN", "BY_INVITATION", "ONLINE"], {
+  WALK_IN: "Walk-in (anyone may come)",
+  BY_INVITATION: "By invitation (shortlisted only)",
+  ONLINE: "Online video interview",
+});
+
+const jobVacancies: CatalogueResource = {
+  key: "jobs",
+  title: "Job vacancies",
+  singular: "job vacancy",
+  description: "Overseas jobs with work visas - Middle East and around the world. Shown on the website's Work visa page.",
+  endpoint: "/api/jobs/vacancies",
+  path: "/catalogue/jobs",
+  privilege: "catalogue:edit",
+  division: "TRAVEL",
+  color: "#1E88E5",
+  searchPlaceholder: "Job, country, reference...",
+  remove: archive,
+  restore: restoreAsDraft,
+  titleOf: (item) => text(item.title),
+  filters: [listingStatusFilter],
+  card: (item) => ({
+    image: photo(item, "TRAVEL"),
+    eyebrow: [text(item.country), text(item.category), item.featured ? "Featured" : ""].filter(Boolean).join(" · "),
+    details: [
+      text(item.reference),
+      `${text(item.positions)} positions`,
+      item.applicationCount != null ? `${text(item.applicationCount)} applied` : "",
+      item.deadline ? `Closes ${formatDate(item.deadline as string)}` : "",
+    ],
+    price:
+      item.salaryMin != null
+        ? `${formatMoney(item.salaryMin as string, item.salaryCurrency as string)}${item.salaryMax != null && Number(item.salaryMax) != Number(item.salaryMin) ? ` - ${Number(item.salaryMax).toLocaleString()}` : ""} / ${text(item.salaryPeriod)}`
+        : "Salary on request",
+  }),
+  sections: [
+    {
+      title: "The job",
+      fields: [
+        { name: "title", label: "Job title", type: "text", required: true, wide: true, placeholder: "Hotel Waiter / Waitress" },
+        { name: "slug", label: "Web address (slug)", type: "text", required: true, slugFrom: "title", help: "Lower-case letters, numbers and dashes. Add the country, e.g. uae-hotel-waiter." },
+        { name: "category", label: "Job category", type: "text", required: true, placeholder: "Hospitality", help: "Candidates filter by this. Reuse the same spelling: Hospitality, Construction, Driving, Healthcare, Domestic work, Manufacturing." },
+        { name: "positions", label: "Number of positions", type: "number", integer: true, defaultValue: "1", required: true },
+        { name: "employer", label: "Employer (as shown on the website)", type: "text", placeholder: "5-star hotel group", help: "Leave empty to keep the employer private." },
+        { name: "description", label: "Job description", type: "textarea", required: true, wide: true },
+      ],
+    },
+    {
+      title: "Country",
+      fields: [
+        { name: "region", label: "Region", type: "select", options: opts(JOB_REGIONS, Object.fromEntries(JOB_REGIONS.map((region) => [region, region]))), defaultValue: "Middle East", required: true },
+        { name: "country", label: "Country", type: "text", required: true, placeholder: "United Arab Emirates" },
+        { name: "city", label: "City", type: "text", placeholder: "Dubai" },
+      ],
+    },
+    {
+      title: "Salary, contract and work visa",
+      fields: [
+        { name: "salaryMin", label: "Salary from", type: "number", nullable: true },
+        { name: "salaryMax", label: "Salary up to", type: "number", nullable: true, help: "Same as 'from' for a fixed salary." },
+        { name: "salaryCurrency", label: "Currency", type: "currency", defaultValue: "USD", placeholder: "AED / QAR / SAR / USD", required: true },
+        { name: "salaryPeriod", label: "Paid per", type: "text", defaultValue: "month", required: true, placeholder: "month" },
+        { name: "contractMonths", label: "Contract length (months)", type: "number", integer: true, nullable: true },
+        { name: "visaType", label: "Work visa type", type: "text", placeholder: "Employment visa, 2 years, renewable" },
+        { name: "benefits", label: "Benefits", type: "lines", wide: true, placeholder: "Free accommodation\nAir ticket every 2 years\nMedical insurance", help: "One per line." },
+      ],
+    },
+    {
+      title: "Who can apply",
+      fields: [
+        { name: "requirements", label: "Requirements", type: "lines", wide: true, placeholder: "2 years experience\nBasic English", help: "One per line." },
+        { name: "documentsNeeded", label: "Documents needed", type: "lines", wide: true, placeholder: "Passport (2 years valid)\nCV\n4 passport-size photos", help: "One per line. Shown as a checklist." },
+        { name: "ageMin", label: "Age from", type: "number", integer: true, nullable: true },
+        { name: "ageMax", label: "Age up to", type: "number", integer: true, nullable: true },
+        { name: "gender", label: "Gender", type: "select", nullable: true, options: [{ value: "Male", label: "Male only" }, { value: "Female", label: "Female only" }], help: "Leave empty for anyone." },
+        { name: "experienceYears", label: "Years of experience needed", type: "number", integer: true, nullable: true },
+      ],
+    },
+    {
+      title: "Announced interview",
+      description: "Optional. Shown on the job page. You can also invite single candidates from their application.",
+      fields: [
+        { name: "interviewMode", label: "Interview type", type: "select", nullable: true, options: JOB_INTERVIEW_MODES },
+        { name: "interviewAt", label: "Interview date and time", type: "datetime", nullable: true },
+        { name: "interviewPlace", label: "Place (or 'Video link sent by email')", type: "text", wide: true, placeholder: "Gazellekey International head office" },
+        { name: "interviewNotes", label: "Notes for candidates", type: "textarea", wide: true, placeholder: "Come in neat dress with your passport and CV." },
+      ],
+    },
+    {
+      title: "Publishing",
+      description: "Published jobs show on the website until the closing date. After it, the job page stays but applications close.",
+      fields: [
+        { name: "deadline", label: "Closing date (last day to apply)", type: "datetime", nullable: true, help: "Only the date is used." },
+        { name: "featured", label: "Feature this job at the top of the Work visa page", type: "checkbox" },
+        { name: "status", label: "Status", type: "select", options: opts(PUBLISH_STATUS), defaultValue: "DRAFT", required: true },
+      ],
+    },
+    photosSection,
+  ],
+};
+
+// Directors, shareholders and managers (/api/team) shown on the website's
+// About us and Contact pages. Phones are kept and shown for managers only.
+const LEADERSHIP_ROLES = opts(["DIRECTOR", "SHAREHOLDER", "MANAGER"]);
+const POSITIONS = [
+  "Chairman",
+  "Managing Director",
+  "Director",
+  "Chief Executive Officer",
+  "General Manager",
+  "Finance Manager",
+  "Operations Manager",
+  "Travel Manager",
+  "Recruitment Manager",
+  "Events Manager",
+  "Gems & Jewellery Manager",
+  "Vehicles Manager",
+  "Import Manager",
+  "Export Manager",
+  "Sales Manager",
+  "Shareholder",
+];
+const POSITION_OPTIONS: Option[] = [...POSITIONS.map((position) => ({ value: position, label: position })), { value: "Other", label: "Other (type it)" }];
+const roleText = (item: Item) => ((item.roles as string[] | undefined) ?? []).map((role) => humanize(role)).join(", ");
+
+// A simple initials picture for people without a photo
+function initialsImage(name: string) {
+  const initials = name.split(/\s+/).filter(Boolean).map((word) => word[0]).join("").slice(0, 2).toUpperCase();
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300"><rect width="400" height="300" fill="#0b1530"/><text x="200" y="185" font-family="Arial" font-size="110" font-weight="700" fill="#d4a64a" text-anchor="middle">${initials}</text></svg>`;
+  return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
+}
+
+const team: CatalogueResource = {
+  key: "team",
+  title: "Directors & managers",
+  singular: "person",
+  description: "Directors, shareholders and managers shown on the website's About us and Contact pages, so customers can reach management. Directors and shareholders show their email only; managers can also show a phone number.",
+  endpoint: "/api/team",
+  path: "/catalogue/team",
+  privilege: "content:edit",
+  color: "#C9A227",
+  searchPlaceholder: "Name, position or email...",
+  addNote: "Fill in the details and click Save. Published people show at once on the website's About us and Contact pages.",
+  remove: archive,
+  restore: restoreAsDraft,
+  titleOf: (item) => text(item.name),
+  table: [
+    { header: "Name", value: (item) => text(item.name), style: "title" },
+    { header: "Position", value: (item) => text(item.position) },
+    { header: "Role", value: roleText },
+    { header: "Division", value: (item) => (item.division ? humanize(text(item.division)) : "Whole company"), style: "muted" },
+    { header: "Email", value: (item) => text(item.email) || "-" },
+    { header: "Phone", value: (item) => (((item.roles as string[] | undefined) ?? []).includes("MANAGER") ? text(item.phone) || "-" : "Not shown"), style: "mono" },
+    { header: "Order", value: (item) => text(item.sortOrder), style: "right" },
+    { header: "Status", value: (item) => humanize(text(item.status)), style: "muted" },
+  ],
+  filters: [
+    { name: "role", label: "Role", options: ["DIRECTOR", "SHAREHOLDER", "MANAGER"] },
+    listingStatusFilter,
+  ],
+  card: (item) => ({
+    image: text(item.photo) || initialsImage(text(item.name)),
+    eyebrow: ((item.roles as string[] | undefined) ?? []).map((role) => humanize(role)).join(" · "),
+    details: [
+      text(item.position),
+      text(item.email),
+      ((item.roles as string[] | undefined) ?? []).includes("MANAGER") ? text(item.phone) : "",
+      item.shareholding != null ? `${text(item.shareholding)}% shares (not shown on the website)` : "",
+    ],
+    price: item.division ? humanize(text(item.division)) : "",
+  }),
+  sections: [
+    {
+      title: "Person",
+      fields: [
+        { name: "name", label: "Full name", type: "text", required: true, placeholder: "Mr. Nimal Perera" },
+        { name: "position", label: "Position", type: "select", options: POSITION_OPTIONS, required: true, help: "Not in the list? Choose Other and type it." },
+        { name: "positionOther", label: "Position (other)", type: "text", placeholder: "e.g. Customer Care Manager", otherFor: { field: "position", value: "Other" } },
+        { name: "roles", label: "Role", type: "multi", options: LEADERSHIP_ROLES, required: true, wide: true, help: "Tick every role that applies - a director can also be a shareholder." },
+        { name: "division", label: "Division (managers)", type: "select", options: DIVISION_OPTIONS, nullable: true, help: "The division this manager runs. Leave empty for the whole company." },
+        { name: "bio", label: "Short introduction", type: "textarea", wide: true, placeholder: "20 years in travel and overseas recruitment." },
+      ],
+    },
+    {
+      title: "Contact",
+      description: "Shown on the website so customers can reach management. Directors and shareholders are shown with their email only - a phone number is never shown or kept for them.",
+      fields: [
+        { name: "email", label: "Email", type: "text", placeholder: "director@gazellekey.com" },
+        { name: "phone", label: "Phone (managers only)", type: "text", showIf: { field: "roles", value: "MANAGER" }, placeholder: "+94 77 123 4567" },
+        { name: "shareholding", label: "Shareholding % (staff only, never shown on the website)", type: "number", nullable: true, showIf: { field: "roles", value: "SHAREHOLDER" } },
+      ],
+    },
+    {
+      title: "Website",
+      fields: [
+        { name: "photo", label: "Photo", type: "photo", wide: true, nullable: true, uploadTo: "/api/team/photos", help: "Optional. A square photo looks best. Without a photo the website shows the person's initials." },
+        { name: "sortOrder", label: "Order", type: "number", integer: true, defaultValue: "100", help: "Smaller numbers show first." },
+        { name: "status", label: "Status", type: "select", options: opts(PUBLISH_STATUS), defaultValue: "PUBLISHED", required: true, help: "Draft = saved but not on the website." },
+      ],
+    },
+  ],
+};
+
 export const CATALOGUE: CatalogueResource[] = [
   shopProducts,
+  rentalItems,
+  jobVacancies,
   tours,
   hotels,
   events,
@@ -789,6 +1092,7 @@ export const CATALOGUE: CatalogueResource[] = [
   parts,
   tradeResource("IMPORT"),
   tradeResource("EXPORT"),
+  team,
 ];
 
 export function findCatalogue(key: string) {

@@ -34,7 +34,7 @@ export default async function AppointmentsPage({ searchParams }: PageProps<"/app
       <PageHeader
         eyebrow="Sales"
         title="Appointments"
-        description="Office visits, phone and video calls booked by customers. Confirmed ones are added to the company Google Calendar."
+        description="Office visits, phone and video calls booked by customers. New requests (yellow) and confirmed ones (green) are added to the company Google Calendar."
         actions={
           <Link href="/appointments?status=REQUESTED" className="btn-gold">
             Waiting for confirmation

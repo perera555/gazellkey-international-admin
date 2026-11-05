@@ -11,10 +11,23 @@ const TONES: Record<string, string> = {
   ASSIGNED: "bg-indigo-100 text-indigo-800",
   IN_PROGRESS: "bg-indigo-100 text-indigo-800",
   IN_FULFILMENT: "bg-indigo-100 text-indigo-800",
+  DELIVERED: "bg-indigo-100 text-indigo-800", // rental items at the customer
+  RETURNED: "bg-green-100 text-green-800",
   AWAITING_CUSTOMER: "bg-amber-100 text-amber-800",
   QUOTED: "bg-violet-100 text-violet-800",
   SENT: "bg-violet-100 text-violet-800",
   REVISED: "bg-slate-100 text-slate-700",
+  // overseas job applications and interviews
+  APPLIED: "bg-blue-100 text-blue-800",
+  SHORTLISTED: "bg-violet-100 text-violet-800",
+  INTERVIEWING: "bg-indigo-100 text-indigo-800",
+  SCHEDULED: "bg-indigo-100 text-indigo-800",
+  SELECTED: "bg-green-100 text-green-800",
+  PASSED: "bg-green-100 text-green-800",
+  VISA_PROCESSING: "bg-amber-100 text-amber-800",
+  MEDICAL: "bg-amber-100 text-amber-800",
+  DEPLOYED: "bg-green-100 text-green-800",
+  WITHDRAWN: "bg-slate-200 text-slate-700",
   // good outcome
   CONVERTED: "bg-green-100 text-green-800",
   ACCEPTED: "bg-green-100 text-green-800",

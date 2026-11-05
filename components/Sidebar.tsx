@@ -11,7 +11,7 @@ export default function Sidebar({
   badges = {},
 }: {
   groups: NavGroup[];
-  badges?: Partial<Record<"documents" | "orders", number>>;
+  badges?: Partial<Record<"documents" | "orders" | "rentals" | "jobs", number>>;
 }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);

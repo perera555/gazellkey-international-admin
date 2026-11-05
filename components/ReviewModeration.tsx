@@ -2,6 +2,7 @@
 
 import { FormEvent, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import toast from "react-hot-toast";
 import ConfirmAction from "@/components/ConfirmAction";
 import { apiRequest } from "@/lib/api-client";
 import { Review } from "@/lib/types";
@@ -28,6 +29,7 @@ export default function ReviewModeration({ review }: { review: Review }) {
     }
     dialog.current?.close();
     setReason("");
+    toast.success("Review removed from the website.");
     router.refresh();
   }
 

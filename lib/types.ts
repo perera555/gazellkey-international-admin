@@ -38,6 +38,138 @@ export interface CustomerSummary {
   country: string | null;
 }
 
+// ─────────────── Overseas jobs (backend lib/jobs.ts) ───────────────
+
+export type JobApplicationStatus =
+  | "APPLIED"
+  | "SHORTLISTED"
+  | "INTERVIEWING"
+  | "SELECTED"
+  | "MEDICAL"
+  | "VISA_PROCESSING"
+  | "DEPLOYED"
+  | "REJECTED"
+  | "WITHDRAWN";
+
+export const APPLICATION_STATUS_LABELS: Record<JobApplicationStatus, string> = {
+  APPLIED: "New",
+  SHORTLISTED: "Shortlisted",
+  INTERVIEWING: "Interviewing",
+  SELECTED: "Selected",
+  MEDICAL: "Medical test",
+  VISA_PROCESSING: "Visa processing",
+  DEPLOYED: "Departed",
+  REJECTED: "Rejected",
+  WITHDRAWN: "Withdrawn",
+};
+
+export const INTERVIEW_STAGE_LABELS: Record<string, string> = {
+  OFFICE: "Our office interview",
+  EMPLOYER: "Employer interview",
+  TRADE_TEST: "Trade test",
+  EMBASSY: "Embassy interview",
+  MEDICAL: "Medical test",
+};
+
+export const INTERVIEW_RESULT_LABELS: Record<string, string> = {
+  SCHEDULED: "Scheduled",
+  PASSED: "Passed",
+  FAILED: "Failed",
+  NO_SHOW: "Did not attend",
+  CANCELLED: "Cancelled",
+};
+
+export interface JobInterview {
+  id: string;
+  stage: string;
+  mode: "IN_PERSON" | "PHONE" | "VIDEO";
+  scheduledAt: string;
+  location: string | null;
+  interviewer: string | null;
+  instructions: string | null;
+  result: string;
+  feedback: string | null;
+}
+
+export interface JobApplication {
+  id: string;
+  reference: string;
+  status: JobApplicationStatus;
+  dateOfBirth: string | null;
+  passportNumber: string | null;
+  passportExpiry: string | null;
+  experienceYears: number | null;
+  currentJob: string | null;
+  message: string | null;
+  staffNotes: string | null;
+  rejectReason: string | null;
+  createdAt: string;
+  customer: CustomerSummary;
+  vacancy: {
+    id: string;
+    reference: string;
+    title: string;
+    country: string;
+    city?: string | null;
+    interviewMode?: string | null;
+    interviewAt?: string | null;
+    interviewPlace?: string | null;
+  };
+  interviews: JobInterview[];
+  nextStatuses?: JobApplicationStatus[];
+  canInterview?: boolean;
+}
+
+// ─────────────── Rentals (backend lib/rentals.ts) ───────────────
+
+export type RentalStatus = "REQUESTED" | "CONFIRMED" | "DELIVERED" | "RETURNED" | "CANCELLED";
+
+export const RENTAL_EVENT_LABELS: Record<string, string> = {
+  WEDDING: "Wedding",
+  FUNERAL: "Funeral",
+  BIRTHDAY: "Birthday",
+  RELIGIOUS: "Religious ceremony",
+  CORPORATE: "Corporate event",
+  PARTY: "Party",
+  OTHER: "Other event",
+};
+
+export interface RentalBookingItem {
+  id: string;
+  rentalItemId: string;
+  name: string;
+  quantity: number;
+  pricePerDay: string;
+  days: number;
+  lineTotal: string;
+  rentalItem?: { id: string; sku: string; unit: string; quantityOwned: number; images: string[] };
+}
+
+export interface RentalBooking {
+  id: string;
+  reference: string;
+  status: RentalStatus;
+  eventType: string;
+  startDate: string; // "2026-11-14T00:00:00.000Z" = that calendar day
+  endDate: string;
+  venue: string;
+  city: string;
+  guests: number | null;
+  needsDelivery: boolean;
+  needsSetup: boolean;
+  message: string | null;
+  currency: string;
+  estimatedTotal: string;
+  quotedTotal: string | null;
+  staffNotes: string | null;
+  cancelReason: string | null;
+  createdAt: string;
+  customer: CustomerSummary;
+  items: RentalBookingItem[];
+  availability?: Record<string, number>; // free units per item on these dates (detail page)
+  nextStatuses?: RentalStatus[];
+}
+
 export interface StaffName {
   id: string;
   firstName: string;
