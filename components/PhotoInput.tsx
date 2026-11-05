@@ -6,6 +6,34 @@ import toast from "react-hot-toast";
 const ACCEPTED = ["image/jpeg", "image/png", "image/webp"];
 const MAX_SIZE = 10 * 1024 * 1024; // same limit as the API (lib/storage.ts)
 
+const MAX_SIDE = 1000; // pixels - plenty for a profile photo
+
+// Resizes a picture in the browser to at most 1000 px and saves it as JPEG,
+// so phone photos of any size upload quickly. null = the browser cannot read it.
+async function shrink(file: File): Promise<File | null> {
+  try {
+    const bitmap = await createImageBitmap(file);
+    const scale = Math.min(1, MAX_SIDE / Math.max(bitmap.width, bitmap.height));
+    if (scale == 1 && ACCEPTED.includes(file.type) && file.size < 2 * 1024 * 1024) {
+      bitmap.close();
+      return file; // already small
+    }
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.round(bitmap.width * scale);
+    canvas.height = Math.round(bitmap.height * scale);
+    const context = canvas.getContext("2d");
+    if (context == null) return null;
+    context.fillStyle = "#ffffff"; // transparent PNGs get a white background
+    context.fillRect(0, 0, canvas.width, canvas.height);
+    context.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+    bitmap.close();
+    const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/jpeg", 0.88));
+    return blob ? new File([blob], file.name.replace(/\.[^.]+$/, "") + ".jpg", { type: "image/jpeg" }) : null;
+  } catch {
+    return null;
+  }
+}
+
 // One photo: choose a picture from the computer (uploaded at once to
 // `uploadTo`, which returns its address) or paste a link. The value is the
 // photo's address, saved with the rest of the form.
@@ -28,14 +56,20 @@ export default function PhotoInput({
   const [useLink, setUseLink] = useState(value != "" && !value.startsWith("/api/"));
   const [busy, setBusy] = useState(false);
 
-  async function upload(file: File | undefined) {
-    if (!file) return;
-    if (!ACCEPTED.includes(file.type) || file.size > MAX_SIZE) {
-      toast.error("Please choose a JPG, PNG or WEBP picture up to 10 MB.");
-      return;
-    }
+  async function upload(chosen: File | undefined) {
+    if (!chosen) return;
     setBusy(true);
     try {
+      // big phone photos (and other picture types) are made small first
+      const file = await shrink(chosen);
+      if (file == null) {
+        toast.error("This picture cannot be read. Please save it as a JPG or PNG (iPhone HEIC photos need converting) and try again.");
+        return;
+      }
+      if (!ACCEPTED.includes(file.type) || file.size > MAX_SIZE) {
+        toast.error("Please choose a JPG, PNG or WEBP picture up to 10 MB.");
+        return;
+      }
       const form = new FormData();
       form.append("file", file);
       const response = await fetch(uploadTo, { method: "POST", body: form });
@@ -96,7 +130,7 @@ export default function PhotoInput({
                 ref={picker}
                 id={id}
                 type="file"
-                accept="image/jpeg,image/png,image/webp"
+                accept="image/*"
                 className="hidden"
                 onChange={(event) => {
                   void upload(event.target.files?.[0]);

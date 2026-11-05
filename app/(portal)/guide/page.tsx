@@ -121,6 +121,18 @@ const SECTIONS: Section[] = [
     ],
   },
   {
+    id: "fertilizer",
+    group: "Daily work",
+    title: "Fertilizer (sold online)",
+    intro: "Fertilizer is a shop product in the category Fertilizer. It shows on the website&apos;s Fertilizer page (in the top menu) and in the Shop, where anyone with an account can buy it online.",
+    steps: [
+      <>Open <Link href="/catalogue/shop?search=Fertilizer">Catalogue → Fertilizer</Link> and click the product to change the <b>price</b> (now LKR 150), the <b>unit</b> (kg), the <b>stock</b> (how many kg you have), the description and the <b>photos</b>.</>,
+      <>To sell another fertilizer (another type or bag size), click <b>Add</b> in Shop products and choose the category <b>Fertilizer</b> - it appears on the Fertilizer page by itself.</>,
+      <>Online orders arrive under <Link href="/orders">Orders &amp; bookings</Link> like every shop order; bulk and dealer requests arrive as <Link href="/enquiries">Enquiries</Link> (Import division).</>,
+    ],
+    tips: [<>Keep the stock up to date - when it reaches 0 the website shows the fertilizer as sold out.</>],
+  },
+  {
     id: "work-visa",
     group: "Daily work",
     title: "Work visa (overseas jobs)",

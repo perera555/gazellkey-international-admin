@@ -139,6 +139,7 @@ const EXPORT_CATEGORIES = ["COFFEE", "CHOCOLATE", "TEA", "SPICES", "FRUITS_VEGET
 // Shop product categories (the website's Shop page filters by these).
 // Add a new one here; the label is saved as the category name.
 export const SHOP_CATEGORIES = [
+  "Fertilizer",
   "Tea & Coffee",
   "Spices & Food",
   "Gifts & Hampers",
@@ -1027,11 +1028,8 @@ const team: CatalogueResource = {
     { header: "Name", value: (item) => text(item.name), style: "title" },
     { header: "Position", value: (item) => text(item.position) },
     { header: "Role", value: roleText },
-    { header: "Division", value: (item) => (item.division ? humanize(text(item.division)) : "Whole company"), style: "muted" },
     { header: "Email", value: (item) => text(item.email) || "-" },
     { header: "Phone", value: (item) => (((item.roles as string[] | undefined) ?? []).includes("MANAGER") ? text(item.phone) || "-" : "Not shown"), style: "mono" },
-    { header: "Order", value: (item) => text(item.sortOrder), style: "right" },
-    { header: "Status", value: (item) => humanize(text(item.status)), style: "muted" },
   ],
   filters: [
     { name: "role", label: "Role", options: ["DIRECTOR", "SHAREHOLDER", "MANAGER"] },

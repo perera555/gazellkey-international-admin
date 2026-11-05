@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import PageHeader from "@/components/PageHeader";
 import ResourceForm from "@/components/ResourceForm";
+import DeleteRestore from "@/components/DeleteRestore";
 import StatusBadge from "@/components/StatusBadge";
 import { apiGetOne } from "@/lib/api";
 import { formatDateTime } from "@/lib/format";
@@ -48,7 +49,12 @@ export default async function EditCatalogueItemPage({ params }: PageProps<"/cata
         description={item.updatedAt ? `Last updated ${formatDateTime(item.updatedAt as string)}` : undefined}
         color={resource.color}
         back={{ href: resource.path, label: resource.title }}
-        actions={typeof item.status == "string" ? <StatusBadge value={item.status} /> : undefined}
+        actions={
+          <div className="flex flex-wrap items-center gap-3">
+            {typeof item.status == "string" ? <StatusBadge value={item.status} /> : null}
+            <DeleteRestore resourceKey={resource.key} id={item.id} title={resource.titleOf(item)} status={item.status} redirectTo={resource.path} />
+          </div>
+        }
       />
       <ResourceForm resourceKey={resource.key} item={item} options={options} />
     </>
