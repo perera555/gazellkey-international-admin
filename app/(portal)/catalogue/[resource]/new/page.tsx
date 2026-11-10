@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import NoPermissionNotice from "@/components/NoPermissionNotice";
 import PageHeader from "@/components/PageHeader";
 import ResourceForm from "@/components/ResourceForm";
 import { formOptions } from "@/lib/options";
@@ -26,6 +27,7 @@ export default async function NewCatalogueItemPage({ params }: PageProps<"/catal
         color={resource.color}
         back={{ href: resource.path, label: resource.title }}
       />
+      <NoPermissionNotice privilege={resource.privilege} />
       <ResourceForm resourceKey={resource.key} options={await formOptions(resource)} />
     </>
   );

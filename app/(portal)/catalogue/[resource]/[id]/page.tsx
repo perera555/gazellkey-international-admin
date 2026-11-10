@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import NoPermissionNotice from "@/components/NoPermissionNotice";
 import PageHeader from "@/components/PageHeader";
 import ResourceForm from "@/components/ResourceForm";
 import DeleteRestore from "@/components/DeleteRestore";
@@ -31,6 +32,7 @@ export default async function EditCatalogueItemPage({ params }: PageProps<"/cata
           color={resource.color}
           back={{ href: resource.path, label: resource.title }}
         />
+        <NoPermissionNotice privilege={resource.privilege} />
         <ResourceForm resourceKey={resource.key} options={await formOptions(resource)} />
       </>
     );
@@ -56,6 +58,7 @@ export default async function EditCatalogueItemPage({ params }: PageProps<"/cata
           </div>
         }
       />
+      <NoPermissionNotice privilege={resource.privilege} />
       <ResourceForm resourceKey={resource.key} item={item} options={options} />
     </>
   );

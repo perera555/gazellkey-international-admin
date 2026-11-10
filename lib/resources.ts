@@ -1000,14 +1000,54 @@ const POSITIONS = [
   "Export Manager",
   "Sales Manager",
   "Shareholder",
+  "IT Director",
+  "Finance Director",
+  "Marketing Director",
+  "Operations Director",
+  "Head of Department",
+  "IT Manager",
+  "HR Manager",
+  "Marketing Manager",
+  "Customer Care Manager",
   "Executive",
+  "Senior Executive",
+  "IT Executive",
+  "Software Developer",
   "Travel Consultant",
   "Customer Care Executive",
   "Accounts Executive",
+  "HR Executive",
   "Marketing Executive",
+  "Sales Executive",
   "Office Assistant",
+  "Driver",
 ];
 const POSITION_OPTIONS: Option[] = [...POSITIONS.map((position) => ({ value: position, label: position })), { value: "Other", label: "Other (type it)" }];
+// Company departments and the six business divisions (+ Other to type a new one)
+const DEPARTMENTS = [
+  "Board of Directors",
+  "Management",
+  "IT Department",
+  "Finance & Accounts",
+  "Human Resources (HR)",
+  "Marketing",
+  "Sales",
+  "Operations",
+  "Customer Care",
+  "Administration",
+  "Legal & Compliance",
+  "Procurement",
+  "Logistics",
+  "Travel Services",
+  "Event Management",
+  "Gems & Jewellery",
+  "Vehicles & Machinery",
+  "Import",
+  "Export",
+  "Fertilizer",
+  "Overseas Recruitment",
+];
+const DEPARTMENT_OPTIONS: Option[] = [...DEPARTMENTS.map((department) => ({ value: department, label: department })), { value: "Other", label: "Other (type it)" }];
 const roleText = (item: Item) => ((item.roles as string[] | undefined) ?? []).map((role) => humanize(role)).join(", ");
 
 // A simple initials picture for people without a photo
@@ -1034,6 +1074,7 @@ const team: CatalogueResource = {
   table: [
     { header: "Name", value: (item) => text(item.name), style: "title" },
     { header: "Position", value: (item) => text(item.position) },
+    { header: "Department", value: (item) => text(item.department) || (item.division ? humanize(text(item.division)) : "-") },
     { header: "Role", value: roleText },
     { header: "Email", value: (item) => text(item.email) || "-" },
     { header: "Phone", value: (item) => (((item.roles as string[] | undefined) ?? []).includes("MANAGER") ? text(item.phone) || "-" : "Not shown"), style: "mono" },
@@ -1051,7 +1092,7 @@ const team: CatalogueResource = {
       ((item.roles as string[] | undefined) ?? []).includes("MANAGER") ? text(item.phone) : "",
       item.shareholding != null ? `${text(item.shareholding)}% shares (not shown on the website)` : "",
     ],
-    price: item.division ? humanize(text(item.division)) : "",
+    price: text(item.department) || (item.division ? humanize(text(item.division)) : ""),
   }),
   sections: [
     {
@@ -1061,7 +1102,8 @@ const team: CatalogueResource = {
         { name: "position", label: "Position", type: "select", options: POSITION_OPTIONS, required: true, help: "Not in the list? Choose Other and type it." },
         { name: "positionOther", label: "Position (other)", type: "text", placeholder: "e.g. Customer Care Manager", otherFor: { field: "position", value: "Other" } },
         { name: "roles", label: "Role", type: "multi", options: LEADERSHIP_ROLES, required: true, wide: true, help: "Tick every role that applies - a director can also be a shareholder. Team = other staff." },
-        { name: "division", label: "Division (managers)", type: "select", options: DIVISION_OPTIONS, nullable: true, help: "The division this manager runs. Leave empty for the whole company." },
+        { name: "department", label: "Division / Department", type: "select", options: DEPARTMENT_OPTIONS, nullable: true, help: "e.g. IT Department or Travel Services. Not in the list? Choose Other and type it. Leave empty for the whole company." },
+        { name: "departmentOther", label: "Division / Department (other)", type: "text", placeholder: "e.g. Research & Development", otherFor: { field: "department", value: "Other" } },
         { name: "bio", label: "Short introduction", type: "textarea", wide: true, placeholder: "20 years in travel and overseas recruitment." },
       ],
     },

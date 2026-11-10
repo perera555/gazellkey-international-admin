@@ -4,7 +4,9 @@ import { useRef, useState } from "react";
 import toast from "react-hot-toast";
 
 const ACCEPTED = ["image/jpeg", "image/png", "image/webp"];
-const MAX_SIZE = 10 * 1024 * 1024; // same limit as the API (lib/storage.ts)
+// The API allows 10 MB (lib/storage.ts), but the hosting accepts only about
+// 4.5 MB per request, so bigger pictures must be shrunk first
+const MAX_UPLOAD = 4 * 1024 * 1024;
 
 const MAX_SIDE = 1000; // pixels - plenty for a profile photo
 
@@ -60,14 +62,21 @@ export default function PhotoInput({
     if (!chosen) return;
     setBusy(true);
     try {
-      // big phone photos (and other picture types) are made small first
-      const file = await shrink(chosen);
+      // big phone photos (and other picture types) are made small first.
+      // If the browser cannot shrink it, a JPG / PNG / WEBP that is small enough
+      // goes as it is (the server checks the file content).
+      const shrunk = await shrink(chosen);
+      const file = shrunk ?? (ACCEPTED.includes(chosen.type) && chosen.size <= MAX_UPLOAD ? chosen : null);
       if (file == null) {
-        toast.error("This picture cannot be read. Please save it as a JPG or PNG (iPhone HEIC photos need converting) and try again.");
+        toast.error(
+          chosen.size > MAX_UPLOAD && ACCEPTED.includes(chosen.type)
+            ? "This picture is too large to send. Please choose a smaller photo (under 4 MB)."
+            : "This picture cannot be read. Please save it as a JPG or PNG (iPhone HEIC photos need converting) and try again.",
+        );
         return;
       }
-      if (!ACCEPTED.includes(file.type) || file.size > MAX_SIZE) {
-        toast.error("Please choose a JPG, PNG or WEBP picture up to 10 MB.");
+      if (!ACCEPTED.includes(file.type) || file.size > MAX_UPLOAD) {
+        toast.error("Please choose a JPG, PNG or WEBP picture up to 4 MB.");
         return;
       }
       const form = new FormData();
