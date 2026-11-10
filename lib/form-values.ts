@@ -82,7 +82,10 @@ function parseJsonLines(value: string) {
   return result;
 }
 
-export function toPayload(field: Field, value: Value, mode: Mode): unknown {
+export function toPayload(field: Field, value: Value | undefined, mode: Mode): unknown {
+  // a field added after the form was opened (e.g. a new field in an update)
+  // has no value yet: treat it as empty instead of failing
+  value ??= field.type == "checkbox" ? false : field.type == "multi" || field.type == "models" || field.type == "itinerary" ? [] : "";
   switch (field.type) {
     case "checkbox":
       return Boolean(value);
