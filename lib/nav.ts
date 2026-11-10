@@ -28,6 +28,7 @@ export const NAV_GROUPS: NavGroup[] = [
       { href: "/enquiries", label: "Enquiries", privilege: "enquiries:read" },
       { href: "/appointments", label: "Appointments", privilege: "appointments:read" },
       { href: "/customers", label: "Customers", privilege: "customers:read" },
+      { href: "/members", label: "Members & points", privilege: "customers:read" },
       { href: "/quotations", label: "Quotations", privilege: "quotations:read" },
       { href: "/orders", label: "Orders & bookings", privilege: "orders:read", badge: "orders" },
       { href: "/rentals", label: "Rental bookings", privilege: "orders:read", division: "EVENTS", badge: "rentals" },
@@ -57,7 +58,7 @@ export const NAV_GROUPS: NavGroup[] = [
     items: [
       { href: "/gallery", label: "Travel gallery", privilege: "catalogue:edit", division: "TRAVEL" },
       { href: "/reviews", label: "Customer reviews", privilege: "reviews:moderate" },
-      { href: "/catalogue/team", label: "Directors & managers", privilege: "content:edit" },
+      { href: "/catalogue/team", label: "Directors, managers & team", privilege: "content:edit" },
     ],
   },
   {

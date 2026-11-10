@@ -979,9 +979,10 @@ const jobVacancies: CatalogueResource = {
   ],
 };
 
-// Directors, shareholders and managers (/api/team) shown on the website's
-// About us and Contact pages. Phones are kept and shown for managers only.
-const LEADERSHIP_ROLES = opts(["DIRECTOR", "SHAREHOLDER", "MANAGER"]);
+// Directors, shareholders, managers and team members (/api/team) shown on the
+// website's Our team page (leadership also on About us and Contact).
+// Phones are kept and shown for managers only.
+const LEADERSHIP_ROLES = opts(["DIRECTOR", "SHAREHOLDER", "MANAGER", "TEAM"]);
 const POSITIONS = [
   "Chairman",
   "Managing Director",
@@ -999,6 +1000,12 @@ const POSITIONS = [
   "Export Manager",
   "Sales Manager",
   "Shareholder",
+  "Executive",
+  "Travel Consultant",
+  "Customer Care Executive",
+  "Accounts Executive",
+  "Marketing Executive",
+  "Office Assistant",
 ];
 const POSITION_OPTIONS: Option[] = [...POSITIONS.map((position) => ({ value: position, label: position })), { value: "Other", label: "Other (type it)" }];
 const roleText = (item: Item) => ((item.roles as string[] | undefined) ?? []).map((role) => humanize(role)).join(", ");
@@ -1012,15 +1019,15 @@ function initialsImage(name: string) {
 
 const team: CatalogueResource = {
   key: "team",
-  title: "Directors & managers",
+  title: "Directors, managers & team",
   singular: "person",
-  description: "Directors, shareholders and managers shown on the website's About us and Contact pages, so customers can reach management. Directors and shareholders show their email only; managers can also show a phone number.",
+  description: "Directors, shareholders, managers and team members shown on the website's Our team page (leadership also on About us and Contact). Add a photo, position and email for each person. Only managers can also show a phone number.",
   endpoint: "/api/team",
   path: "/catalogue/team",
   privilege: "content:edit",
   color: "#C9A227",
   searchPlaceholder: "Name, position or email...",
-  addNote: "Fill in the details and click Save. Published people show at once on the website's About us and Contact pages.",
+  addNote: "Fill in the details and click Save. Published people show at once on the website's Our team page.",
   remove: archive,
   restore: restoreAsDraft,
   titleOf: (item) => text(item.name),
@@ -1032,7 +1039,7 @@ const team: CatalogueResource = {
     { header: "Phone", value: (item) => (((item.roles as string[] | undefined) ?? []).includes("MANAGER") ? text(item.phone) || "-" : "Not shown"), style: "mono" },
   ],
   filters: [
-    { name: "role", label: "Role", options: ["DIRECTOR", "SHAREHOLDER", "MANAGER"] },
+    { name: "role", label: "Role", options: ["DIRECTOR", "SHAREHOLDER", "MANAGER", "TEAM"] },
     listingStatusFilter,
   ],
   card: (item) => ({
@@ -1053,7 +1060,7 @@ const team: CatalogueResource = {
         { name: "name", label: "Full name", type: "text", required: true, placeholder: "Mr. Nimal Perera" },
         { name: "position", label: "Position", type: "select", options: POSITION_OPTIONS, required: true, help: "Not in the list? Choose Other and type it." },
         { name: "positionOther", label: "Position (other)", type: "text", placeholder: "e.g. Customer Care Manager", otherFor: { field: "position", value: "Other" } },
-        { name: "roles", label: "Role", type: "multi", options: LEADERSHIP_ROLES, required: true, wide: true, help: "Tick every role that applies - a director can also be a shareholder." },
+        { name: "roles", label: "Role", type: "multi", options: LEADERSHIP_ROLES, required: true, wide: true, help: "Tick every role that applies - a director can also be a shareholder. Team = other staff." },
         { name: "division", label: "Division (managers)", type: "select", options: DIVISION_OPTIONS, nullable: true, help: "The division this manager runs. Leave empty for the whole company." },
         { name: "bio", label: "Short introduction", type: "textarea", wide: true, placeholder: "20 years in travel and overseas recruitment." },
       ],
